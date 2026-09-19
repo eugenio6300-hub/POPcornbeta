@@ -201,12 +201,16 @@
 
     <h1>✏️ OOC 명령어 작성기</h1>
 
-    <div class="quick-buttons">
+       <div class="quick-buttons">
       <button data-insert="{{char}}">{{char}}</button>
       <button data-insert="{{user}}">{{user}}</button>
       <button data-insert="NPC: ">NPC:</button>
       <button data-insert="PC: ">PC:</button>
       <button data-insert="OOC: ">OOC:</button>
+      <!-- 여기부터 새로 추가한 버튼 3개 -->
+      <button data-insert="현재 에피소드를 종료. 완전히 별개의 새로운 에피소드 시작.">현재 에피소드 종료</button>
+      <button data-insert="현재 에피소드 종료. 완전히 별개의 어나더 에피소드 시작.">au 에피소드</button>
+      <button data-insert="이전 채팅에 영향받지 않음.">이전 채팅 미영향</button>
     </div>
 
     <textarea id="ooc-editor" placeholder="여기에 OOC 명령어를 작성하세요..."></textarea>
@@ -244,9 +248,16 @@
 
     <textarea id="viewer-content" readonly></textarea>
 
-    <div class="btn-row">
+        <div class="btn-row">
       <button class="btn-primary" id="copy-content-btn">📋 복사하기</button>
       <span class="feedback success" id="content-copy-feedback"></span>
+    </div>
+
+    <!-- 새로 추가: 작성 화면으로 돌아가는 버튼 -->
+    <div class="btn-row">
+      <a href="./" style="text-decoration: none;">
+        <button class="btn-primary" id="write-my-own-btn">✏️ 나도 작성하기</button>
+      </a>
     </div>
 
     <div class="feedback error" id="viewer-error"></div>
