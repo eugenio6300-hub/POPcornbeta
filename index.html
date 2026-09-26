@@ -24,10 +24,10 @@
       background-color: #f4f4f8;
       margin: 0;
       padding: 20px;
-      /* 이전에는 display:flex + justify-content:center로 가운데 정렬했었는데,
-         이 방식은 콘텐츠가 화면보다 넓어지면 "왼쪽이 잘려서 스크롤도 안 되는"
-         인앱 브라우저 버그를 유발할 수 있어서 제거함.
-         대신 .container에 margin: 0 auto를 줘서 가운데 정렬함 (아래 참고) */
+      /* display:flex + justify-content:center 대신
+         .container에 margin:0 auto를 줘서 가운데 정렬함
+         (flex 중앙정렬은 콘텐츠가 넘칠 때 왼쪽이 잘려서 안 보이는
+         인앱 브라우저 버그를 유발할 수 있어서 제거함) */
     }
 
     .container {
@@ -37,7 +37,7 @@
       padding: 24px;
       width: 100%;
       max-width: 600px;
-      margin: 0 auto; /* body가 더 이상 flex가 아니므로, 이걸로 가운데 정렬 */
+      margin: 0 auto;
     }
 
     /* ===== 브랜딩 영역 (로고 + 타이틀 + 슬로건) ===== */
@@ -78,7 +78,7 @@
     /* ===== 빠른 삽입 버튼 영역 ===== */
     .quick-buttons {
       display: flex;
-      flex-wrap: wrap; /* 화면이 좁으면 버튼이 자동으로 다음 줄로 넘어감 */
+      flex-wrap: wrap;
       gap: 8px;
       margin-bottom: 12px;
     }
@@ -152,6 +152,32 @@
       cursor: not-allowed;
     }
 
+    /* ===== 역할 바꾸기 버튼 전용 스타일 =====
+       발행/복사 버튼(진한 보라색)과 구분되게, 테두리만 있는 스타일로
+       "보조 기능"이라는 느낌을 줌 */
+    .btn-secondary {
+      padding: 10px 20px;
+      border: 1px solid #4a3aff;
+      border-radius: 8px;
+      background-color: white;
+      color: #4a3aff;
+      font-size: 15px;
+      font-weight: bold;
+      cursor: pointer;
+      transition: background-color 0.15s ease;
+    }
+
+    .btn-secondary:hover {
+      background-color: #f0f0ff;
+    }
+
+    /* 역할이 바뀐 상태일 때는 버튼 배경을 채워서 "지금 바뀐 상태"임을
+       시각적으로 알려줌 (토글 on/off를 눈으로 구분하기 위함) */
+    .btn-secondary.active {
+      background-color: #4a3aff;
+      color: white;
+    }
+
     .feedback {
       font-size: 14px;
       font-weight: bold;
@@ -201,8 +227,8 @@
 
     <div class="brand-header">
       <div class="logo">🍿</div>
-      <p class="brand-name">POPcorn</p>
-      <p class="tagline">터지는 순간, 공유되는 대사</p>
+      <p class="brand-name">POPcorn.Beta</p>
+      <p class="tagline">간단하고 편리한 OOC 작성기, 팝콘입니다.</p>
     </div>
 
     <h1>✏️ OOC 명령어 작성기</h1>
@@ -213,7 +239,6 @@
       <button data-insert="NPC: ">NPC:</button>
       <button data-insert="PC: ">PC:</button>
       <button data-insert="OOC: ">OOC:</button>
-      <!-- 여기부터 새로 추가한 단축어 버튼 3개 -->
       <button data-insert="현재 에피소드를 종료. 완전히 별개의 새로운 에피소드 시작.">현재 에피소드 종료</button>
       <button data-insert="현재 에피소드 종료. 완전히 별개의 어나더 에피소드 시작.">au 에피소드</button>
       <button data-insert="이전 채팅에 영향받지 않음.">이전 채팅 미영향</button>
@@ -244,20 +269,26 @@
 
     <div class="brand-header">
       <div class="logo">🍿</div>
-      <p class="brand-name">POPcorn</p>
-      <p class="tagline">터지는 순간, 공유되는 대사</p>
+      <p class="brand-name">POPcorn.Beta</p>
+      <p class="tagline">간단하고 편리한 OOC 작성기, 팝콘입니다.</p>
     </div>
 
     <h1>📄 공유된 OOC 명령어</h1>
 
     <textarea id="viewer-content" readonly></textarea>
 
+    <!-- ===== 새로 추가: {{user}} / {{char}} 역할 바꾸기 버튼 =====
+         누르면 텍스트 안의 {{user}}와 {{char}}가 서로 뒤바뀌고,
+         다시 누르면 원래대로 돌아옴 (토글 방식) -->
+    <div class="btn-row">
+      <button class="btn-secondary" id="swap-role-btn">🔄 {{user}} ↔ {{char}} 바꾸기</button>
+    </div>
+
     <div class="btn-row">
       <button class="btn-primary" id="copy-content-btn">📋 복사하기</button>
       <span class="feedback success" id="content-copy-feedback"></span>
     </div>
 
-    <!-- 작성 화면으로 돌아가는 버튼 -->
     <div class="btn-row">
       <a href="./" style="text-decoration: none;">
         <button class="btn-primary" id="write-my-own-btn">✏️ 나도 작성하기</button>
@@ -294,6 +325,9 @@
     const app = initializeApp(firebaseConfig);
     const db = getFirestore(app);
 
+    // --------------------------------------------
+    // 자주 쓰는 DOM 요소들을 변수에 담아두기
+    // --------------------------------------------
     const editorView = document.getElementById("editor-view");
     const viewerView = document.getElementById("viewer-view");
 
@@ -309,8 +343,19 @@
     const copyContentBtn = document.getElementById("copy-content-btn");
     const contentCopyFeedback = document.getElementById("content-copy-feedback");
     const viewerError = document.getElementById("viewer-error");
+    const swapRoleBtn = document.getElementById("swap-role-btn");
 
     const quickButtons = document.querySelectorAll(".quick-buttons button");
+
+    // --------------------------------------------
+    // 조회 모드 전용 상태값
+    // originalPostContent: Firestore에서 불러온 "원본 그대로"의 글 내용.
+    //   역할을 몇 번을 바꾸든 항상 이 원본 기준으로 다시 계산해야
+    //   여러 번 눌러도 내용이 깨지지 않음.
+    // isRoleSwapped: 지금 화면에 "바뀐 상태"가 보이고 있는지 여부 (토글 값)
+    // --------------------------------------------
+    let originalPostContent = "";
+    let isRoleSwapped = false;
 
     // --------------------------------------------
     // 지금 이 페이지가 "작성 모드"인지 "조회 모드"인지 판단
@@ -337,7 +382,9 @@
 
         if (docSnap.exists()) {
           const data = docSnap.data();
-          viewerContent.value = data.content;
+          // 불러온 원본을 따로 저장해둠 (역할 바꾸기 계산의 기준이 됨)
+          originalPostContent = data.content;
+          viewerContent.value = originalPostContent;
         } else {
           viewerError.textContent = "글을 찾을 수 없어요. 링크가 정확한지 확인해주세요.";
         }
@@ -348,14 +395,50 @@
     }
 
     // --------------------------------------------
+    // {{user}} <-> {{char}} 를 안전하게 서로 맞바꾸는 함수
+    //
+    // 왜 임시 표시(placeholder)를 거치는가?
+    //   text.replaceAll("{{user}}", "{{char}}") 를 먼저 하면
+    //   원래 있던 {{char}}와 방금 바뀐 {{char}}를 구분할 수 없게 되고,
+    //   그 다음 "{{char}}"를 "{{user}}"로 바꾸는 순간
+    //   전부 다시 {{user}}로 통일되어버리는 문제가 생김.
+    //
+    //   그래서 "일단 {{user}}를 아무도 안 쓸 임시 문자열로 바꿔두고",
+    //   "그 다음에 {{char}}를 {{user}}로 바꾸고",
+    //   "마지막에 임시 문자열을 {{char}}로 바꾼다" 순서로 진행하면
+    //   서로 꼬이지 않고 완전히 자리를 맞바꿀 수 있음
+    // --------------------------------------------
+    function swapUserAndChar(text) {
+      const placeholder = "%%%POPCORN_SWAP_TEMP%%%";
+      return text
+        .split("{{user}}").join(placeholder)
+        .split("{{char}}").join("{{user}}")
+        .split(placeholder).join("{{char}}");
+    }
+
+    // --------------------------------------------
+    // [조회 모드] 역할 바꾸기 버튼 기능
+    // --------------------------------------------
+    swapRoleBtn.addEventListener("click", () => {
+      // 토글: 지금 상태의 반대로 뒤집음
+      isRoleSwapped = !isRoleSwapped;
+
+      if (isRoleSwapped) {
+        // 바뀐 상태로 전환: 항상 "원본"을 기준으로 바꿔야
+        // 여러 번 눌러도 내용이 이상해지지 않음
+        viewerContent.value = swapUserAndChar(originalPostContent);
+        swapRoleBtn.classList.add("active");
+        swapRoleBtn.textContent = "↩️ 원래대로 되돌리기";
+      } else {
+        // 원래 상태로 복귀
+        viewerContent.value = originalPostContent;
+        swapRoleBtn.classList.remove("active");
+        swapRoleBtn.textContent = "🔄 {{user}} ↔ {{char}} 바꾸기";
+      }
+    });
+
+    // --------------------------------------------
     // 클립보드 복사 공용 함수 (인앱 브라우저 호환성 강화 버전)
-    //
-    // execCommand 방식을 먼저 시도함 → "화면 밖 임시 textarea에
-    // 텍스트를 넣고 선택 후 복사"하는 구식이지만 호환성 높은 방식.
-    // 트위터 등 일부 인앱 브라우저에서 navigator.clipboard API가
-    // 한글 등을 이상하게(퍼센트 인코딩 등) 처리하는 문제를 피하기 위함.
-    //
-    // execCommand가 지원 안 되면 최신 Clipboard API로 자동 폴백함.
     // --------------------------------------------
     function copyTextRobust(text) {
       return new Promise((resolve, reject) => {
@@ -363,7 +446,6 @@
           const tempTextarea = document.createElement("textarea");
           tempTextarea.value = text;
 
-          // 화면 밖으로 밀어내서 사용자 눈에 안 보이게 함
           tempTextarea.style.position = "fixed";
           tempTextarea.style.left = "-9999px";
           tempTextarea.style.top = "0";
@@ -371,8 +453,6 @@
           document.body.appendChild(tempTextarea);
           tempTextarea.focus();
           tempTextarea.select();
-          // 아이폰 사파리는 select()만으로는 부족해서 범위를 직접 지정해줘야
-          // 전체가 확실히 선택됨
           tempTextarea.setSelectionRange(0, text.length);
 
           const successful = document.execCommand("copy");
@@ -384,7 +464,6 @@
             throw new Error("execCommand copy 실패");
           }
         } catch (err) {
-          // execCommand 방식이 실패하면, 최신 Clipboard API로 한 번 더 시도
           if (navigator.clipboard && navigator.clipboard.writeText) {
             navigator.clipboard.writeText(text).then(resolve).catch(reject);
           } else {
@@ -396,6 +475,9 @@
 
     // --------------------------------------------
     // [조회 모드] 복사 버튼 기능
+    // 지금 화면에 보이는 값(viewerContent.value)을 그대로 복사하므로,
+    // 역할을 바꾼 상태에서 누르면 바뀐 버전이, 원래 상태에서 누르면
+    // 원본이 복사됨 (자연스럽게 연동됨)
     // --------------------------------------------
     copyContentBtn.addEventListener("click", () => {
       copyTextRobust(viewerContent.value)
@@ -492,3 +574,4 @@
   </script>
 </body>
 </html>
+
