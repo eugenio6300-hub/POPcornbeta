@@ -3,7 +3,6 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <!-- 브라우저 탭에 표시되는 이름을 POPcorn으로 변경 -->
   <title>POPcorn</title>
 
   <style>
@@ -12,13 +11,23 @@
       box-sizing: border-box;
     }
 
+    /* html, body에 가로 스크롤/넘침을 원천 차단
+       → 트위터 등 인앱 브라우저에서 화면이 옆으로 쏠려서
+         내용이 잘리는 버그를 막기 위한 안전장치 */
+    html, body {
+      max-width: 100%;
+      overflow-x: hidden;
+    }
+
     body {
       font-family: "Apple SD Gothic Neo", "Malgun Gothic", sans-serif;
       background-color: #f4f4f8;
       margin: 0;
       padding: 20px;
-      display: flex;
-      justify-content: center;
+      /* 이전에는 display:flex + justify-content:center로 가운데 정렬했었는데,
+         이 방식은 콘텐츠가 화면보다 넓어지면 "왼쪽이 잘려서 스크롤도 안 되는"
+         인앱 브라우저 버그를 유발할 수 있어서 제거함.
+         대신 .container에 margin: 0 auto를 줘서 가운데 정렬함 (아래 참고) */
     }
 
     .container {
@@ -28,10 +37,10 @@
       padding: 24px;
       width: 100%;
       max-width: 600px;
+      margin: 0 auto; /* body가 더 이상 flex가 아니므로, 이걸로 가운데 정렬 */
     }
 
-    /* ===== 새로 추가: 브랜딩 영역 (로고 + 타이틀 + 슬로건) =====
-       에디터 맨 위, 다른 요소들과 살짝 구분되게 하단에 얇은 선을 넣음 */
+    /* ===== 브랜딩 영역 (로고 + 타이틀 + 슬로건) ===== */
     .brand-header {
       text-align: center;
       margin-bottom: 20px;
@@ -40,7 +49,7 @@
     }
 
     .brand-header .logo {
-      font-size: 40px; /* 이모지를 로고처럼 크게 표시 */
+      font-size: 40px;
       line-height: 1;
       margin-bottom: 4px;
     }
@@ -48,7 +57,7 @@
     .brand-header .brand-name {
       font-size: 28px;
       font-weight: 800;
-      color: #4a3aff; /* 기존 포인트 컬러랑 통일 */
+      color: #4a3aff;
       margin: 0;
       letter-spacing: -0.5px;
     }
@@ -69,7 +78,7 @@
     /* ===== 빠른 삽입 버튼 영역 ===== */
     .quick-buttons {
       display: flex;
-      flex-wrap: wrap;
+      flex-wrap: wrap; /* 화면이 좁으면 버튼이 자동으로 다음 줄로 넘어감 */
       gap: 8px;
       margin-bottom: 12px;
     }
@@ -190,24 +199,21 @@
   ============================================ -->
   <div class="container" id="editor-view">
 
-    <!-- ===== 새로 추가: 브랜딩 영역 =====
-         팝콘 이모지를 로고 대용으로 사용, 나중에 진짜 로고 이미지로
-         교체하고 싶으면 이 emoji 부분을 <img src="로고경로"> 로 바꾸면 됨 -->
     <div class="brand-header">
       <div class="logo">🍿</div>
-      <p class="brand-name">POPcorn.Beta</p>
-      <p class="tagline">간단하고 편리한 OOC 작성기, 팝콘입니다.</p>
+      <p class="brand-name">POPcorn</p>
+      <p class="tagline">터지는 순간, 공유되는 대사</p>
     </div>
 
     <h1>✏️ OOC 명령어 작성기</h1>
 
-       <div class="quick-buttons">
+    <div class="quick-buttons">
       <button data-insert="{{char}}">{{char}}</button>
       <button data-insert="{{user}}">{{user}}</button>
       <button data-insert="NPC: ">NPC:</button>
       <button data-insert="PC: ">PC:</button>
       <button data-insert="OOC: ">OOC:</button>
-      <!-- 여기부터 새로 추가한 버튼 3개 -->
+      <!-- 여기부터 새로 추가한 단축어 버튼 3개 -->
       <button data-insert="현재 에피소드를 종료. 완전히 별개의 새로운 에피소드 시작.">현재 에피소드 종료</button>
       <button data-insert="현재 에피소드 종료. 완전히 별개의 어나더 에피소드 시작.">au 에피소드</button>
       <button data-insert="이전 채팅에 영향받지 않음.">이전 채팅 미영향</button>
@@ -236,24 +242,22 @@
   ============================================ -->
   <div class="container" id="viewer-view" style="display: none;">
 
-    <!-- 조회 화면에도 브랜딩을 넣어서, 링크를 처음 받은 사람도
-         "아 이게 POPcorn이라는 서비스구나"를 알 수 있게 함 -->
     <div class="brand-header">
       <div class="logo">🍿</div>
-      <p class="brand-name">POPcorn.Beta</p>
-      <p class="tagline">간단하고 편리한 OOC 작성기, 팝콘입니다.</p>
+      <p class="brand-name">POPcorn</p>
+      <p class="tagline">터지는 순간, 공유되는 대사</p>
     </div>
 
     <h1>📄 공유된 OOC 명령어</h1>
 
     <textarea id="viewer-content" readonly></textarea>
 
-        <div class="btn-row">
+    <div class="btn-row">
       <button class="btn-primary" id="copy-content-btn">📋 복사하기</button>
       <span class="feedback success" id="content-copy-feedback"></span>
     </div>
 
-    <!-- 새로 추가: 작성 화면으로 돌아가는 버튼 -->
+    <!-- 작성 화면으로 돌아가는 버튼 -->
     <div class="btn-row">
       <a href="./" style="text-decoration: none;">
         <button class="btn-primary" id="write-my-own-btn">✏️ 나도 작성하기</button>
@@ -308,6 +312,9 @@
 
     const quickButtons = document.querySelectorAll(".quick-buttons button");
 
+    // --------------------------------------------
+    // 지금 이 페이지가 "작성 모드"인지 "조회 모드"인지 판단
+    // --------------------------------------------
     const urlParams = new URLSearchParams(window.location.search);
     const postId = urlParams.get("id");
 
@@ -320,6 +327,9 @@
       viewerView.style.display = "none";
     }
 
+    // --------------------------------------------
+    // [조회 모드] Firestore에서 글 불러오는 함수
+    // --------------------------------------------
     async function loadPost(id) {
       try {
         const docRef = doc(db, "posts", id);
@@ -337,9 +347,58 @@
       }
     }
 
+    // --------------------------------------------
+    // 클립보드 복사 공용 함수 (인앱 브라우저 호환성 강화 버전)
+    //
+    // execCommand 방식을 먼저 시도함 → "화면 밖 임시 textarea에
+    // 텍스트를 넣고 선택 후 복사"하는 구식이지만 호환성 높은 방식.
+    // 트위터 등 일부 인앱 브라우저에서 navigator.clipboard API가
+    // 한글 등을 이상하게(퍼센트 인코딩 등) 처리하는 문제를 피하기 위함.
+    //
+    // execCommand가 지원 안 되면 최신 Clipboard API로 자동 폴백함.
+    // --------------------------------------------
+    function copyTextRobust(text) {
+      return new Promise((resolve, reject) => {
+        try {
+          const tempTextarea = document.createElement("textarea");
+          tempTextarea.value = text;
+
+          // 화면 밖으로 밀어내서 사용자 눈에 안 보이게 함
+          tempTextarea.style.position = "fixed";
+          tempTextarea.style.left = "-9999px";
+          tempTextarea.style.top = "0";
+
+          document.body.appendChild(tempTextarea);
+          tempTextarea.focus();
+          tempTextarea.select();
+          // 아이폰 사파리는 select()만으로는 부족해서 범위를 직접 지정해줘야
+          // 전체가 확실히 선택됨
+          tempTextarea.setSelectionRange(0, text.length);
+
+          const successful = document.execCommand("copy");
+          document.body.removeChild(tempTextarea);
+
+          if (successful) {
+            resolve();
+          } else {
+            throw new Error("execCommand copy 실패");
+          }
+        } catch (err) {
+          // execCommand 방식이 실패하면, 최신 Clipboard API로 한 번 더 시도
+          if (navigator.clipboard && navigator.clipboard.writeText) {
+            navigator.clipboard.writeText(text).then(resolve).catch(reject);
+          } else {
+            reject(err);
+          }
+        }
+      });
+    }
+
+    // --------------------------------------------
+    // [조회 모드] 복사 버튼 기능
+    // --------------------------------------------
     copyContentBtn.addEventListener("click", () => {
-      navigator.clipboard
-        .writeText(viewerContent.value)
+      copyTextRobust(viewerContent.value)
         .then(() => {
           contentCopyFeedback.textContent = "복사됨!";
           setTimeout(() => {
@@ -352,6 +411,9 @@
         });
     });
 
+    // --------------------------------------------
+    // [작성 모드] 빠른 삽입 버튼 기능
+    // --------------------------------------------
     quickButtons.forEach((btn) => {
       btn.addEventListener("click", () => {
         const textToInsert = btn.getAttribute("data-insert");
@@ -372,6 +434,9 @@
       editor.focus();
     }
 
+    // --------------------------------------------
+    // [작성 모드] 발행하기 버튼 기능
+    // --------------------------------------------
     publishBtn.addEventListener("click", async () => {
       const content = editor.value.trim();
 
@@ -408,9 +473,11 @@
       }
     });
 
+    // --------------------------------------------
+    // [작성 모드] 공유 링크 복사 버튼 기능
+    // --------------------------------------------
     copyLinkBtn.addEventListener("click", () => {
-      navigator.clipboard
-        .writeText(shareLinkInput.value)
+      copyTextRobust(shareLinkInput.value)
         .then(() => {
           linkCopyFeedback.textContent = "복사됨!";
           setTimeout(() => {
